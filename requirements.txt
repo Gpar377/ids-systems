@@ -1,0 +1,14 @@
+# Python 3.12.13 (not 3.13+ -- ART/SHAP wheel availability).
+# Direct dependencies, exact pins, verified installed.
+# Full transitive set: uv pip freeze --python ./.venv/Scripts/python.exe
+
+adversarial-robustness-toolbox==1.20.1
+joblib==1.6.0
+matplotlib==3.11.1
+numpy==2.5.3
+pandas==3.0.5
+pytest==9.1.1
+scikit-learn==1.9.0
+scipy==1.18.1
+seaborn==0.13.2
+shap==0.52.0

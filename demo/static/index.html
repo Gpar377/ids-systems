@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IDS Realizability Lab</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3 5 7v8c0 7 4.6 12.4 11 14 6.4-1.6 11-7 11-14V7L16 3Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M10 16h4l2-5 3 10 2-5h3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div>
+      <div class="brand-name">IDS Realizability Lab</div>
+      <div class="brand-sub">Adversarial evasion vs. what the wire allows · SRM 21CSC302J · Topic 10</div>
+    </div>
+  </div>
+  <nav class="tabs" role="tablist">
+    <button class="tab active" data-tab="overview" role="tab">Overview</button>
+    <button class="tab" data-tab="network" role="tab">Network simulation</button>
+    <button class="tab" data-tab="lab" role="tab">Attack lab</button>
+    <button class="tab" data-tab="capture" role="tab">Live capture</button>
+  </nav>
+</header>
+
+<main>
+<!-- ======================= OVERVIEW ======================= -->
+<section id="tab-overview" class="view active">
+  <div class="hero">
+    <h1>An adversarial example is only a threat if a real attacker can <em>send</em> it.</h1>
+    <p>ML intrusion detectors are usually attacked by nudging all 41 NSL-KDD features freely.
+      Over real TCP/IP an attacker controls only <strong id="ov-mutable">9</strong> of them.
+      This lab measures how much of the threat survives when the attack is limited to what the wire allows,
+      and compares the published IDS against our improved one.</p>
+  </div>
+  <div class="stats" id="ov-stats"></div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-h"><h2>Evasion rate</h2><span class="hint">of attacks each IDS catches, % the attacker can disguise as normal (PGD)</span></div>
+      <div id="ov-evasion" class="chart"></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h2>Who controls the 41 features?</h2><span class="hint">hover a tile</span></div>
+      <div id="ov-taxonomy" class="taxo"></div>
+      <div class="legend">
+        <span><i class="sw a"></i>A — attacker sets freely</span>
+        <span><i class="sw b"></i>B — constrained (integer / raise-only)</span>
+        <span><i class="sw c"></i>C — victim or third party decides</span>
+      </div>
+    </div>
+  </div>
+  <div class="card notes">
+    <h2>How these numbers were measured</h2>
+    <ul>
+      <li><b>Honest protocol.</b> Trained on KDDTrain+, tested on KDDTest+, which contains 17 attack types never seen in training. A random split of the training file scores ~99.8% because it tests on attacks the model has already seen.</li>
+      <li><b>Threshold.</b> Our IDS's alarm threshold was chosen on validation data where whole attack types were held out of training. The test set was never used to pick it.</li>
+      <li><b>Evasion, not accuracy-under-attack.</b> The attacker perturbs only their own attack traffic. Perturbing every test connection (the paper's protocol) mostly manufactures false alarms on normal users' traffic, which no attacker controls.</li>
+      <li>Every number on this page is read from <code>results/*.csv</code>, produced by <code>python src/experiment.py</code>.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ======================= NETWORK ======================= -->
+<section id="tab-network" class="view">
+  <div class="toolbar">
+    <div class="seg" id="sim-scenario">
+      <button data-s="benign">Benign traffic</button>
+      <button data-s="recon" class="on">Recon scan</button>
+      <button data-s="dos">DoS flood</button>
+      <button data-s="r2l">Remote login attack</button>
+      <button data-s="u2r">Privilege escalation</button>
+    </div>
+    <div class="spacer"></div>
+    <label class="inline">Speed <input type="range" id="sim-speed" min="1" max="8" value="3"></label>
+    <button class="btn primary" id="sim-play">Play</button>
+    <button class="btn" id="sim-reset">Reset</button>
+  </div>
+  <div class="net-layout">
+    <div class="card net-card">
+      <svg id="net" viewBox="0 0 760 380" role="img" aria-label="Network topology">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="arrowhead"/></marker>
+        </defs>
+        <!-- links -->
+        <path class="link" d="M130 110 L330 190"/>
+        <path class="link" d="M130 270 L330 190"/>
+        <path class="link" d="M390 190 L600 190"/>
+        <path class="link span" d="M360 215 L360 300"/>
+        <!-- nodes -->
+        <g class="node users" transform="translate(70,110)"><rect x="-58" y="-34" width="116" height="68" rx="10"/><text y="-8">Other users</text><text y="12" class="sub">legit clients</text></g>
+        <g class="node attacker" transform="translate(70,270)"><rect x="-58" y="-34" width="116" height="68" rx="10"/><text y="-8">Attacker</text><text y="12" class="sub">192.168.90.20</text></g>
+        <g class="node switch" transform="translate(360,190)"><rect x="-32" y="-24" width="64" height="48" rx="8"/><text y="5">switch</text></g>
+        <g class="node victim" transform="translate(660,190)"><rect x="-62" y="-44" width="124" height="88" rx="10"/><text y="-16">Victim server</text><text y="4" class="sub">192.168.90.10</text><text y="22" class="sub">ftp·ssh·http·imap4</text></g>
+        <g class="node sensor" transform="translate(360,325)"><rect x="-86" y="-26" width="172" height="52" rx="10"/><text y="-4">IDS sensor</text><text y="14" class="sub">mirror (SPAN) port</text></g>
+        <g id="packets"></g>
+        <g id="sensor-flash" class="sensor-flash" transform="translate(360,325)"></g>
+      </svg>
+      <div class="sim-caption">Replays real KDDTest+ connections through both IDSs. Normal connections come from other users; attack connections come from the attacker.</div>
+    </div>
+    <div class="side">
+      <div class="card">
+        <div class="card-h"><h2>Current connection</h2><span class="hint" id="sim-progress">—</span></div>
+        <div id="sim-current" class="conn-card empty">Press Play</div>
+      </div>
+      <div class="card">
+        <div class="card-h"><h2>Scoreboard</h2></div>
+        <div id="sim-score" class="score"></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-h"><h2>Connection log</h2><span class="hint">MISSED = attack allowed through · FALSE ALARM = normal traffic flagged</span></div>
+    <div class="table-wrap"><table class="log" id="sim-log">
+      <thead><tr><th>#</th><th>Source</th><th>Truth</th><th>Service</th><th>Flag</th><th>Bytes</th><th>Paper's IDS</th><th>Our IDS</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </div>
+</section>
+
+<!-- ======================= ATTACK LAB ======================= -->
+<section id="tab-lab" class="view">
+  <div class="lab-layout">
+    <aside class="card controls">
+      <h2>Set up the attack</h2>
+      <label class="field">Attack connection
+        <select id="lab-sample"></select>
+      </label>
+      <button class="btn small ghost" id="lab-dramatic">Pick an example that fools the paper's IDS</button>
+      <div class="field">Target IDS
+        <div class="seg full" id="lab-victim">
+          <button data-v="paper" class="on">Paper's IDS</button>
+          <button data-v="ours">Our IDS</button>
+        </div>
+      </div>
+      <div class="field">Method
+        <div class="seg full" id="lab-method">
+          <button data-m="fgsm">FGSM</button>
+          <button data-m="pgd" class="on">PGD</button>
+        </div>
+      </div>
+      <label class="field">Budget ε <span id="lab-eps-v" class="mono">0.20</span>
+        <input type="range" id="lab-eps" min="0.05" max="0.5" step="0.05" value="0.2">
+      </label>
+      <div class="field">Threat model
+        <div class="mode" id="lab-mode">
+          <button data-r="0" class="on"><b>Unrestricted</b><span>the paper's attacker: all 41 features move freely</span></button>
+          <button data-r="1"><b>Realistic</b><span>only what can be sent on the wire (9 features)</span></button>
+        </div>
+      </div>
+      <button class="btn primary big" id="lab-run">Launch attack</button>
+      <div id="lab-history" class="history"></div>
+    </aside>
+    <div class="lab-main">
+      <div class="card verdict" id="lab-verdict">
+        <div class="empty">Pick a connection and launch an attack.</div>
+      </div>
+      <div class="card">
+        <div class="card-h"><h2>The 41 features, before → after</h2>
+          <span class="legend inline-legend">
+            <span><i class="sw a"></i>A</span><span><i class="sw b"></i>B</span><span><i class="sw c"></i>C</span>
+            <span><i class="sw moved"></i>changed, realizable</span><span><i class="sw bad"></i>changed, impossible</span>
+          </span>
+        </div>
+        <div id="lab-features" class="features"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= LIVE CAPTURE ======================= -->
+<section id="tab-capture" class="view">
+  <div class="grid-2">
+    <div class="card">
+      <h2>Run the lab on a machine with Docker</h2>
+      <p class="muted">The capture lab is an isolated Docker network: attacker, victim, a third-party host and a tcpdump sensor. It needs no internet once the images are built.</p>
+      <ol class="steps">
+        <li>Copy the project's <code>lab/</code> folder to the Docker machine.</li>
+        <li>Run <code>bash run_capture.sh full</code> inside it.</li>
+        <li>Bring back <code>lab/pcaps/capture.pcap</code> and drop it here.</li>
+      </ol>
+      <p class="muted small">Content features (logged_in, num_root, …) are host state that never appears on the wire, so they are 0 in captured rows. That is itself the argument for why they are Class C.</p>
+    </div>
+    <div class="card">
+      <h2>Score a capture</h2>
+      <label id="drop" class="drop">
+        <input type="file" id="pcap-file" accept=".pcap,.pcapng,.cap">
+        <span class="drop-t">Drop a <b>.pcap</b> here or click to choose</span>
+        <span class="drop-s">Scored locally by both IDSs; nothing leaves this machine</span>
+      </label>
+      <div id="cap-summary"></div>
+    </div>
+  </div>
+  <div class="card" id="cap-table-card" hidden>
+    <div class="card-h"><h2>Captured connections</h2><span class="hint" id="cap-file"></span></div>
+    <div class="table-wrap"><table class="log" id="cap-table">
+      <thead><tr><th>#</th><th>Source</th><th>Service</th><th>Flag</th><th>Bytes</th><th>Dur</th><th>count</th><th>dst_host_count</th><th>Paper's IDS</th><th>Our IDS</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </div>
+</section>
+</main>
+
+<div id="toast" class="toast" hidden></div>
+<script src="app.js"></script>
+</body>
+</html>

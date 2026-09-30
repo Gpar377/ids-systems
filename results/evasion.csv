@@ -1,0 +1,17 @@
+model,threat_model,attack,constrained,n_detected_attacks,evasion_rate
+baseline,static,fgsm,False,8113,0.2667324047824479
+baseline,static,pgd,False,8113,0.3108591150006163
+baseline,static,fgsm,True,8113,0.1312707999506964
+baseline,static,pgd,True,8113,0.1301614692468877
+adv_trained,static,fgsm,False,7717,0.0
+adv_trained,static,pgd,False,7717,0.0
+adv_trained,static,fgsm,True,7717,0.0708824672800311
+adv_trained,static,pgd,True,7717,0.0708824672800311
+adv_trained,adaptive,fgsm,False,7717,0.0
+adv_trained,adaptive,pgd,False,7717,0.0
+adv_trained,adaptive,fgsm,True,7717,0.06621744201114423
+adv_trained,adaptive,pgd,True,7717,0.06867953868083453
+improved_ids,static,fgsm,False,11437,0.0013989682609075807
+improved_ids,static,pgd,False,11437,0.04861414706653843
+improved_ids,static,fgsm,True,11437,0.01774940981026493
+improved_ids,static,pgd,True,11437,0.03025268864212643

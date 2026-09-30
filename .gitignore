@@ -1,0 +1,19 @@
+# Data: NSL-KDD is redistributable but bulky; see data/README.md to obtain.
+data/*.txt
+data/*.csv
+data/*.arff
+
+.venv/
+__pycache__/
+*.pyc
+*.joblib
+results/plots/*
+results/shap/*
+!results/.gitkeep
+.pytest_cache/
+
+# Lab capture output
+lab/pcaps/*.pcap
+lab/pcaps/*.pcap[0-9]*
+lab/pcaps/*.csv
+lab/pcaps/*.json

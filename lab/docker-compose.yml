@@ -1,0 +1,77 @@
+# Isolated IDS capture lab. Three containers on one bridge that has NO route off
+# the host (internal: true) -- traffic cannot reach the internet or the LAN.
+# This mirrors the Modules 1-2 topology: attacker, victim, and a sensor that
+# sees the wire, all on a private segment.
+#
+#   generator --\
+#                >-- idsnet (192.168.90.0/24, internal) -- victim
+#   (traffic)   /                                           ^
+#                                                           |
+#   capture (tcpdump) shares victim's network namespace ----+
+#
+# The capture container sits in the victim's netns, so its PCAP is exactly what
+# an IDS sensor at the victim would see -- which is the point: the host-based
+# window features (32-41) are aggregates over THIS vantage point.
+services:
+  victim:
+    build: ./victim
+    container_name: ids-victim
+    networks:
+      idsnet:
+        ipv4_address: 192.168.90.10
+    # No published ports: nothing is exposed to the host. Reachable only from
+    # inside idsnet.
+
+  capture:
+    image: nicolaka/netshoot
+    container_name: ids-capture
+    # Share the victim's network stack -> see every packet to/from the victim.
+    network_mode: "service:victim"
+    depends_on: [victim]
+    volumes:
+      - ./pcaps:/pcaps
+    # Ring buffer so a long run can't fill the disk; -U for line-buffered writes.
+    command: >
+      tcpdump -i eth0 -U -s 0 -w /pcaps/capture.pcap
+      -W 5 -C 50 tcp or udp or icmp
+    cap_add: [NET_ADMIN, NET_RAW]
+
+  generator:
+    build: ./generator
+    image: ids-generator:local
+    container_name: ids-generator
+    depends_on: [capture]
+    networks:
+      idsnet:
+        ipv4_address: 192.168.90.20   # the "attacker" source
+    volumes:
+      - ./generator:/work
+      - ./pcaps:/pcaps
+    working_dir: /work
+    command: ["sleep", "infinity"]    # idle; scenarios driven via `exec`
+    cap_add: [NET_ADMIN, NET_RAW]
+
+  # A distinct third-party host. Its whole reason to exist: it contributes to the
+  # victim's host-based window (features 32-41) while sharing NONE of the
+  # attacker's control. Test 2 changes only this container's traffic and shows
+  # dst_host_* move -- proof those features are not attacker-settable.
+  noise:
+    image: ids-generator:local
+    container_name: ids-noise
+    depends_on: [generator]
+    networks:
+      idsnet:
+        ipv4_address: 192.168.90.30
+    volumes:
+      - ./generator:/work
+    working_dir: /work
+    command: ["sleep", "infinity"]
+    cap_add: [NET_ADMIN, NET_RAW]
+
+networks:
+  idsnet:
+    driver: bridge
+    internal: true          # <-- no gateway to the outside world
+    ipam:
+      config:
+        - subnet: 192.168.90.0/24

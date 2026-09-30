@@ -1,0 +1,75 @@
+{
+  "libraries": {
+    "numpy": "2.5.3",
+    "pandas": "3.0.5",
+    "scikit-learn": "1.9.0",
+    "scipy": "1.18.1",
+    "shap": "0.52.0",
+    "adversarial-robustness-toolbox": "1.20.1",
+    "matplotlib": "3.11.1",
+    "seaborn": "0.13.2",
+    "joblib": "1.6.0",
+    "python": "3.12.13",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "attack_params": {
+    "eps": 0.2,
+    "alpha": 0.02,
+    "iters": 10,
+    "note": "alpha*iters >= eps so PGD reaches its budget"
+  },
+  "random_state": 42,
+  "data": {
+    "n_train": 125973,
+    "n_test": 22544,
+    "n_encoded_features": 122,
+    "novel_attack_types_in_test": 17
+  },
+  "mask": {
+    "n_raw_features": 41,
+    "class_A": 1,
+    "class_B": 9,
+    "class_C": 31,
+    "continuously_mutable": 9,
+    "mutable_features": [
+      "count",
+      "duration",
+      "land",
+      "num_failed_logins",
+      "src_bytes",
+      "srv_count",
+      "su_attempted",
+      "urgent",
+      "wrong_fragment"
+    ],
+    "n_encoded_cols": 122,
+    "n_mutable_encoded_cols": 9,
+    "frac_encoded_mutable": 0.07377049180327869
+  },
+  "perturbation": {
+    "fgsm_unconstrained": {
+      "linf": 0.20000000000000018,
+      "l2_mean": 1.607969597597136,
+      "n_cols_moved": 122,
+      "n_cols_total": 122
+    },
+    "pgd_unconstrained": {
+      "linf": 0.20000000000000007,
+      "l2_mean": 1.45327229163838,
+      "n_cols_moved": 122,
+      "n_cols_total": 122
+    },
+    "fgsm_constrained": {
+      "linf": 0.5,
+      "l2_mean": 0.36263036481198024,
+      "n_cols_moved": 8,
+      "n_cols_total": 122
+    },
+    "pgd_constrained": {
+      "linf": 0.5,
+      "l2_mean": 0.19829502823806733,
+      "n_cols_moved": 5,
+      "n_cols_total": 122
+    }
+  }
+}

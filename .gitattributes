@@ -1,0 +1,15 @@
+# The capture lab runs on Linux (inside Docker). Shell scripts and Dockerfiles
+# with Windows line endings break bash ("$'\r': command not found"), so force LF
+# regardless of the checkout machine's core.autocrlf.
+*.sh        text eol=lf
+Dockerfile  text eol=lf
+lab/**      text eol=lf
+*.py        text eol=lf
+
+# The Windows launcher must stay CRLF for cmd.exe.
+*.bat       text eol=crlf
+
+# Binary captures and models are never diffed.
+*.pcap      binary
+*.pcapng    binary
+*.joblib    binary

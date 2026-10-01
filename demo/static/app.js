@@ -294,10 +294,11 @@ function renderFeatures(res) {
 }
 function renderVerdict(res) {
   const thrL = `threshold ${res.threshold.toFixed(2)}`;
+  const edge = res.threshold < 0.15 ? "start" : res.threshold > 0.85 ? "end" : "";
   const gauge = (lbl, p) => `
     <div class="gauge"><div class="lbl"><span>${lbl}</span><b>P(attack) = ${p.toFixed(3)}</b></div>
       <div class="bar"><div class="fill ${p >= res.threshold ? "hi" : "lo"}" style="width:${(100 * p).toFixed(1)}%"></div>
-      <div class="thr" data-l="${thrL}" style="left:${(100 * res.threshold).toFixed(1)}%"></div></div></div>`;
+      <div class="thr ${edge}" data-l="${thrL}" style="left:${(100 * res.threshold).toFixed(1)}%"></div></div></div>`;
   const evaded = res.detected_before && !res.detected_after;
   const verdict = !res.detected_before ? ["Not detected even before the attack", "evaded"]
     : evaded ? ["EVADED — the attack slipped through", "evaded"] : ["DETECTED — the IDS held", "detected"];
@@ -306,7 +307,7 @@ function renderVerdict(res) {
   let explain;
   if (res.mode === "unrestricted") {
     const ex = bad.slice(0, 3).map(f => `<b>${f.name}</b> (${f.violations[0]})`).join(", ");
-    explain = `<div class="explain unreal">This attack changed <b>${res.features_changed}</b> features, and <b>${res.impossible_values}</b> of them take values no packet sequence can produce${ex ? `: ${ex}${bad.length > 3 ? ", …" : ""}` : ""}.
+    explain = `<div class="explain unreal">This attack changed <b>${res.features_changed}</b> features, and <b>${res.impossible_values}</b> of them take values no packet sequence can produce${ex ? `: ${ex}${bad.length > 3 ? `, and ${bad.length - 3} more` : ""}` : ""}.
       ${evaded ? "It fools the model <b>on paper</b>, but an attacker cannot send it." : "Even this impossible attack did not get through."}</div>`;
   } else {
     const ex = changed.slice(0, 4).map(f => `<b>${f.name}</b> ${esc(fmtNum(f.before, f.name))} → ${esc(fmtNum(f.after, f.name))}`).join(", ");
@@ -378,6 +379,44 @@ const drop = $("#drop");
 ["dragleave", "drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
 drop.addEventListener("drop", e => e.dataTransfer.files[0] && scorePcap(e.dataTransfer.files[0]));
 
+/* ================= deep links =================
+   Open the demo straight into a state, e.g. for a bookmark or a report screenshot:
+     #tab=lab&lab=dramatic&victim=paper&mode=0     run the "fools the paper" example
+     #tab=network&sim=recon&seed=7&instant=24      replay 24 connections, no animation
+*/
+function selectSeg(root, attr, value) {
+  $$("button", root).forEach(b => b.classList.toggle("on", b.dataset[attr] === value));
+}
+async function simInstant(scenario, seed, n) {
+  const d = await api(`/api/simulate?scenario=${scenario}&n=36&seed=${seed}`);
+  SIM.rows = d.rows; SIM.thr = { paper: d.thr_paper, ours: d.thr_ours };
+  $("#sim-log tbody").innerHTML = ""; resetScore();
+  for (let k = 0; k < Math.min(n, d.rows.length); k++) simArrive(d.rows[k], k + 1);
+  SIM.i = Math.min(n, d.rows.length);
+}
+async function applyDeepLink() {
+  const h = new URLSearchParams(location.hash.slice(1));
+  if (!h.toString()) return;
+  const tab = h.get("tab");
+  if (tab) $(`.tab[data-tab="${tab}"]`)?.click();
+  if (h.get("sim")) {
+    SIM.scenario = h.get("sim"); selectSeg($("#sim-scenario"), "s", SIM.scenario);
+    if (h.get("instant")) await simInstant(SIM.scenario, +(h.get("seed") || 1), +h.get("instant"));
+  }
+  if (h.get("lab")) {
+    LAB.victim = h.get("victim") || "paper"; selectSeg($("#lab-victim"), "v", LAB.victim);
+    LAB.realistic = h.get("mode") === "1"; selectSeg($("#lab-mode"), "r", LAB.realistic ? "1" : "0");
+    if (h.get("lab") === "dramatic") {
+      // deterministic for screenshots: first sample the paper's IDS can be fooled on
+      const s = LAB.samples.find(x => x.evades_paper);
+      if (s) $("#lab-sample").value = s.id;
+    } else if (h.get("lab") !== "1") {
+      $("#lab-sample").value = h.get("lab");
+    }
+    await labRun();
+  }
+}
+
 /* ================= boot ================= */
 (async function boot() {
   try {
@@ -387,5 +426,7 @@ drop.addEventListener("drop", e => e.dataTransfer.files[0] && scorePcap(e.dataTr
     LAB.samples = await api("/api/samples");
     fillSamples();
     resetScore();
+    await applyDeepLink();
+    document.body.dataset.ready = "1";
   } catch (e) { toast("Could not reach the demo server: " + e.message); }
 })();

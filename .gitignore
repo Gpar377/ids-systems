@@ -17,3 +17,6 @@ lab/pcaps/*.pcap
 lab/pcaps/*.pcap[0-9]*
 lab/pcaps/*.csv
 lab/pcaps/*.json
+
+# Report build previews (regenerated)
+report/_preview/

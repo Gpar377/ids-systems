@@ -1,6 +1,8 @@
 """Offline demo server for the IDS case study.
 
-    python demo/app.py            -> http://127.0.0.1:8000 (opens the browser)
+    python demo/app.py            -> http://127.0.0.1:8765 (opens the browser)
+    python demo/app.py --port 9000   (if the port is taken it moves to the next free
+                                      port on its own and prints which one)
 
 Standard library only (http.server) so it runs on the viva laptop with no
 internet and nothing extra to install. Loads both IDSs once, then computes
@@ -42,7 +44,10 @@ from preprocess import (CATEGORICAL, FEATURES, NUMERIC, RATE_FEATURES,  # noqa: 
                         load_dataset)
 from surrogate import MLPSurrogate  # noqa: E402
 
-HOST, PORT = "127.0.0.1", 8000
+# 8765, not 8000: 8000 is the default for many dev servers (and for another
+# project on this machine). A shared address means Chrome shares cache and
+# service workers between the two apps and can show the wrong one.
+HOST, PORT = "127.0.0.1", 8765
 ALPHA_DEFAULT, ITERS_DEFAULT = 0.02, 10
 
 # NSL-KDD attack label -> family, for the scenario simulator.
@@ -391,11 +396,41 @@ class Handler(BaseHTTPRequestHandler):
                           TYPES.get(f.suffix, "application/octet-stream"))
 
 
+class ExclusiveServer(ThreadingHTTPServer):
+    """Refuse to share a port.
+
+    http.server sets SO_REUSEADDR, and on Windows that lets a second process bind
+    a port another program is already listening on -- silently. The demo then
+    reports "running" while the browser reaches the OTHER program. Exclusive
+    binding turns that into an error we can react to."""
+    allow_reuse_address = False
+
+    def server_bind(self):
+        import socket
+        if hasattr(socket, "SO_EXCLUSIVEADDRUSE"):          # Windows only
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, 1)
+        super().server_bind()
+
+
+def bind_free_port(start: int, tries: int = 20) -> ExclusiveServer:
+    for port in range(start, start + tries):
+        try:
+            return ExclusiveServer((HOST, port), Handler)
+        except OSError:
+            print(f"  port {port} is in use by another program, trying {port + 1}...",
+                  flush=True)
+    raise SystemExit(f"no free port in {start}-{start + tries - 1}; "
+                     f"pass --port N to pick another range")
+
+
 def main() -> None:
     global STATE
+    port = PORT
+    if "--port" in sys.argv:
+        port = int(sys.argv[sys.argv.index("--port") + 1])
     STATE = State()
-    srv = ThreadingHTTPServer((HOST, PORT), Handler)
-    url = f"http://{HOST}:{PORT}/"
+    srv = bind_free_port(port)
+    url = f"http://{HOST}:{srv.server_address[1]}/"
     print(f"demo running at {url}  (Ctrl+C to stop)", flush=True)
     if "--no-browser" not in sys.argv:
         threading.Timer(0.8, lambda: webbrowser.open(url)).start()

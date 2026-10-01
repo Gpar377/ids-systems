@@ -140,8 +140,8 @@ def main() -> None:
     print("[2/5] attacker's substitute model (MLP, nonlinear)")
     sub = build_surrogate(Xtr, ytr)
     art = wrap(sub)
-    print(f"  substitute clean test acc: "
-          f"{evaluate(sub, Xte, yte)['accuracy']:.4f}")
+    sub_acc = evaluate(sub, Xte, yte)["accuracy"]
+    print(f"  substitute clean test acc: {sub_acc:.4f}")
 
     print("[3/5] adversarial test sets")
     # Predicted, not true, labels -- see attacks.attack_labels.
@@ -164,8 +164,8 @@ def main() -> None:
     ytr_def = rf_def.predict(Xtr)
     sub_adapt = build_surrogate(Xtr, ytr_def, verbose=False)
     art_adapt = wrap(sub_adapt)
-    print(f"  adaptive surrogate agrees with defended model on "
-          f"{(sub_adapt.predict(Xte) == rf_def.predict(Xte)).mean():.3f} of test")
+    agreement = float((sub_adapt.predict(Xte) == rf_def.predict(Xte)).mean())
+    print(f"  adaptive surrogate agrees with defended model on {agreement:.3f} of test")
     yte_adapt = attack_labels(sub_adapt, Xte)
     adv_adapt = {f"adaptive_{k}": v
                  for k, v in build_attack_sets(art_adapt, Xte, yte_adapt, pre).items()}
@@ -232,6 +232,8 @@ def main() -> None:
                  "novel_attack_types_in_test": len(d["novel_attack_types"])},
         "mask": ms,
         "perturbation": perturb,
+        "surrogate": {"clean_test_accuracy": float(sub_acc),
+                      "adaptive_agreement_with_defended": agreement},
     }
     (RESULTS / "run_metadata.json").write_text(json.dumps(meta, indent=2))
 

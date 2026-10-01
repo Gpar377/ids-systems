@@ -7,7 +7,7 @@ only: no internet, no CDN, nothing extra to install beyond the project venv.
 .venv/Scripts/python.exe demo/app.py      # or double-click demo/run_demo.bat
 ```
 
-Opens <http://127.0.0.1:8000>. Startup takes about 12 s (it loads both IDSs; the
+Opens <http://127.0.0.1:8765>. Startup takes about 12 s (it loads both IDSs; the
 attacker's surrogate models are cached in `results/` after the first run).
 
 ## The four views

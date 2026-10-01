@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "ids-demo",
+      "runtimeExecutable": "D:/SRM KTR/projects/IDS systems/.venv/Scripts/python.exe",
+      "runtimeArgs": ["demo/app.py", "--no-browser"],
+      "port": 8765
+    }
+  ]
+}

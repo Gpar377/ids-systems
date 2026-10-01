@@ -71,5 +71,9 @@
       "n_cols_moved": 5,
       "n_cols_total": 122
     }
+  },
+  "surrogate": {
+    "clean_test_accuracy": 0.805624556422995,
+    "adaptive_agreement_with_defended": 0.9336852377572746
   }
 }

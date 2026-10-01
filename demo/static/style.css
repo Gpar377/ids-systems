@@ -220,7 +220,12 @@ table.log { width: 100%; border-collapse: collapse; font-size: 12.5px; }
 .bar .fill { position: absolute; inset: 0 auto 0 0; border-radius: 999px; transition: width .6s cubic-bezier(.2,.8,.2,1); }
 .bar .fill.hi { background: var(--bad); } .bar .fill.lo { background: var(--ok); }
 .bar .thr { position: absolute; top: -5px; bottom: -5px; width: 2px; background: var(--text); }
-.bar .thr::after { content: attr(data-l); position: absolute; top: -17px; left: 50%; transform: translateX(-50%); font: 10.5px var(--mono); color: var(--muted); white-space: nowrap; }
+/* threshold label sits BELOW the bar (above it collides with the gauge title when
+   the threshold is near 0, e.g. our IDS's 0.04); pinned to the edge near either end */
+.gauge { margin-bottom: 16px; }
+.bar .thr::after { content: attr(data-l); position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%); font: 10.5px var(--mono); color: var(--muted); white-space: nowrap; }
+.bar .thr.start::after { left: 0; transform: none; }
+.bar .thr.end::after { left: auto; right: 0; transform: none; }
 .kpis { display: flex; gap: 22px; flex-wrap: wrap; margin-top: 14px; }
 .kpi .n { font: 700 22px var(--mono); } .kpi .l { color: var(--muted); font-size: 12px; }
 .kpi .n.bad { color: var(--bad); } .kpi .n.ok { color: var(--ok); }

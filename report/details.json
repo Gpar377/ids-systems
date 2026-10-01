@@ -1,0 +1,19 @@
+{
+  "_note": "Edit these, then run: .venv/Scripts/python.exe report/build_report.py  -- anything still in [brackets] is highlighted yellow in the report.",
+  "title": "IMPROVING NETWORK SECURITY THROUGH INTRUSION DETECTION SYSTEMS",
+  "subtitle": "Realizable Adversarial Evasion and a Robust Machine-Learning IDS",
+  "course": "21CSC302J - Computer Networks · Case Study, Topic 10",
+  "students": [
+    ["[STUDENT NAME 1]", "[RA23XXXXXXXXXXX]"],
+    ["[STUDENT NAME 2]", "[RA23XXXXXXXXXXX]"],
+    ["[STUDENT NAME 3]", "[RA23XXXXXXXXXXX]"]
+  ],
+  "guide_name": "[GUIDE NAME]",
+  "guide_designation": "[Designation]",
+  "guide_department": "[Department of ...]",
+  "degree": "BACHELOR OF TECHNOLOGY",
+  "branch": "COMPUTER SCIENCE ENGINEERING",
+  "specialisation": "[with specialisation in ...]",
+  "month_year": "OCTOBER 2026",
+  "own_paper_reference": "[Authors], \"[Title of your ICADS 2026 paper],\" in Proc. [full ICADS 2026 conference name], 2026, pp. [xx-yy]."
+}

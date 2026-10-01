@@ -147,7 +147,7 @@ attacker controls** (ρ = 0.9995 stability across subsamples).
 .venv/Scripts/python.exe demo/app.py     # or double-click demo/run_demo.bat
 ```
 
-Offline, standard library only, opens at http://127.0.0.1:8000. Four views:
+Offline, standard library only, opens at http://127.0.0.1:8765. Four views:
 
 - **Overview:** headline numbers and the evasion chart, read live from `results/*.csv`.
 - **Network simulation:** animated topology replaying real KDDTest+ connections
